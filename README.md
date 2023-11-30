@@ -1,4 +1,4 @@
-# Spencer's [website](https://spencerpao.github.io/)
+# My [website](https://arturavakyan.github.io/)
 
 Used from the al-folio template mentioned below.
 
