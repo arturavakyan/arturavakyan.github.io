@@ -117,14 +117,14 @@
   <p>Welcome to my Curriculum Vitae webpage. You can view my current CV in PDF format here on the page or dowload it in the same format directly from the following link below:</p>
 
   <!-- Download Link -->
-  <p><b><a href="/assets/CV_Avakyan.pdf" download>Download CV here</a></b></p>
+  <p><b><a href="/assets/CV_Avakyan.pdf" download>Download CV pdf</a></b></p>
   
  <div id="adobe-dc-view"></div>
  <script src="https://acrobatservices.adobe.com/view-sdk/viewer.js"></script>
  <script type="text/javascript">
     document.addEventListener("adobe_dc_view_sdk.ready", function()
     {
-        var adobeDCView = new AdobeDC.View({clientId: "31dacb12b8af47bf9d62677e107e2e6>", divId: "adobe-dc-view"});
+        var adobeDCView = new AdobeDC.View({clientId: "31dacb12b8af47bf9d62677e107e2e6", divId: "adobe-dc-view"});
         adobeDCView.previewFile(
        {
           content:   {location: {url: "/assets/CV_Avakyan.pdf"}},
