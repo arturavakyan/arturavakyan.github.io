@@ -179,7 +179,7 @@
   const darkModeToggle = document.getElementById('light-toggle');
   const googleMapsIframe = document.getElementById('google-maps-iframe');
 
-  darkModeToggle.addEventListener('change', () => {
+  darkModeToggle.addEventListener('click', () => {
     if (darkModeToggle.checked) {
       // Dark mode is active
       googleMapsIframe.style.filter = 'grayscale(1) invert(1) hue-rotate(180deg)';
