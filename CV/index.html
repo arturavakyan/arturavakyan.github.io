@@ -41,7 +41,6 @@
 
     <script src="/assets/js/theme.js"></script>
     <script src="/assets/js/dark_mode.js"></script>
-    <script src="/assets/build/pdf1.js"></script>
     
 
   </head>
@@ -115,38 +114,25 @@
 
     <article>
       
-  <p>Welcome to my Curriculum Vitae webpage. You can view my current CV in PDF format here on the page or dowload it in the same format directly from the link below:</p>
-
-  <!-- PDF Viewer Container -->
-  <div id="pdf-viewer"></div>
+  <p>Welcome to my Curriculum Vitae webpage. You can view my current CV in PDF format here on the page or dowload it in the same format directly from the following link below:</p>
 
   <!-- Download Link -->
   <p><b><a href="/assets/CV_Avakyan.pdf" download>Download CV</a></b></p>
-
-<!-- JavaScript to Render PDF -->
-<script type="module">
-  import * as pdfjsLib from '/assets/build/pdf1.js';
-
-  const pdfPath = '/assets/CV_Avakyan.pdf';
-
-  pdfjsLib.getDocument(pdfPath).promise.then(pdf => {
-    return pdf.getPage(1);
-  }).then(page => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const viewport = page.getViewport({ scale: 1.5 });
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    document.getElementById('pdf-viewer').appendChild(canvas);
-
-    page.render({ canvasContext: context, viewport: viewport });
-  }).catch(error => {
-    console.error('Error loading PDF:', error);
-  });
-</script>
-
+  
+ <div id="adobe-dc-view"></div>
+ <script src="https://acrobatservices.adobe.com/view-sdk/viewer.js"></script>
+ <script type="text/javascript">
+    document.addEventListener("adobe_dc_view_sdk.ready", function()
+    {
+        var adobeDCView = new AdobeDC.View({clientId: "<31dacb12b8af47bf9d62677e107e2e63>", divId: "adobe-dc-view"});
+        adobeDCView.previewFile(
+       {
+          content:   {location: {url: "/assets/CV_Avakyan.pdf"}},
+          metaData: {fileName: "/assets/CV_Avakyan.pdf"}
+       });
+    });
+   
+    
     </article>
         
 </div>
