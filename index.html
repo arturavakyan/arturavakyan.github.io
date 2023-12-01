@@ -181,7 +181,8 @@
   const googleMapsIframe = document.getElementById('google-maps-iframe');
 
   darkModeToggle.addEventListener('click', () => {
-    if (darkModeToggle.checked) {
+        theme=localStorage.getItem("theme")
+    if (theme == "dark") {
       // Dark mode is active
       googleMapsIframe.style.filter = 'grayscale(1) invert(1) hue-rotate(180deg)';
     } else {
