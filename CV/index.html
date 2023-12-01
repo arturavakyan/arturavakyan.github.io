@@ -115,7 +115,7 @@
 
     <article>
       
-  <p>Welcome to my Curriculum Vitae page. You can view my CV in PDF format or download it directly below:</p>
+  <p>Welcome to my Curriculum Vitae webpage. You can view my CV in PDF format or download it directly below:</p>
 
   <!-- PDF Viewer Container -->
   <div id="pdf-viewer"></div>
@@ -123,10 +123,12 @@
   <!-- Download Link -->
   <p><b><a href="/assets/CV_Avakyan.pdf" download>Download CV</a></b></p>
 
-  <!-- JavaScript to Render PDF -->
-  <script>
-    const pdfPath = '/assets/CV_Avakyan.pdf';
+<!-- JavaScript to Render PDF -->
+<script>
+  const pdfPath = '/assets/CV_Avakyan.pdf';
 
+  // Ensure that pdfjsLib is correctly loaded
+  if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.getDocument(pdfPath).promise.then(pdf => {
       return pdf.getPage(1);
     }).then(page => {
@@ -141,7 +143,10 @@
 
       page.render({ canvasContext: context, viewport: viewport });
     });
-  </script>
+  } else {
+    console.error('pdfjsLib is not defined. Make sure the PDF.js library is loaded correctly.');
+  }
+</script>
 
     </article>
         
