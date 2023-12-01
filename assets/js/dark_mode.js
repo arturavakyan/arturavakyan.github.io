@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (googleMapsIframe !== null){
         if (theme == "dark") {
           // Dark mode is active
-          googleMapsIframe.style.filter = 'grayscale(1) invert(1) hue-rotate(180deg)';
+          googleMapsIframe.style.filter = 'invert(1) hue-rotate(180deg)';
         } else {
           // Dark mode is inactive
           googleMapsIframe.style.filter = 'none'; // Reset to default
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (AdobeDCview !== null){
         if (theme == "dark") {
           // Dark mode is active
-          AdobeDCview.style.filter = 'grayscale(1) invert(1) hue-rotate(180deg)';
+          AdobeDCview.style.filter = 'invert(1) hue-rotate(180deg)';
         } else {
           // Dark mode is inactive
           AdobeDCview.style.filter = 'none'; // Reset to default
