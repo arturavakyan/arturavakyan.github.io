@@ -124,28 +124,27 @@
   <p><b><a href="/assets/CV_Avakyan.pdf" download>Download CV</a></b></p>
 
 <!-- JavaScript to Render PDF -->
-<script>
+<script type="module">
+  import * as pdfjsLib from '/assets/build/pdf.mjs';
+
   const pdfPath = '/assets/CV_Avakyan.pdf';
 
-  // Ensure that pdfjsLib is correctly loaded
-  if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.getDocument(pdfPath).promise.then(pdf => {
-      return pdf.getPage(1);
-    }).then(page => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      const viewport = page.getViewport({ scale: 1.5 });
+  pdfjsLib.getDocument(pdfPath).promise.then(pdf => {
+    return pdf.getPage(1);
+  }).then(page => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 1.5 });
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
-      document.getElementById('pdf-viewer').appendChild(canvas);
+    document.getElementById('pdf-viewer').appendChild(canvas);
 
-      page.render({ canvasContext: context, viewport: viewport });
-    });
-  } else {
-    console.error('pdfjsLib is not defined. Make sure the PDF.js library is loaded correctly.');
-  }
+    page.render({ canvasContext: context, viewport: viewport });
+  }).catch(error => {
+    console.error('Error loading PDF:', error);
+  });
 </script>
 
     </article>
