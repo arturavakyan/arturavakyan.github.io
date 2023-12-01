@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const AdobeDCview = document.getElementById('adobe-dc-view');
     mode_toggle.addEventListener("click", function() {
         toggleTheme(localStorage.getItem("theme"));
-    theme=localStorage.getItem("theme")
+    theme=localStorage.getItem("theme");
     if (theme == "dark") {
       // Dark mode is active
       googleMapsIframe.style.filter = 'grayscale(1) invert(1) hue-rotate(180deg)';
