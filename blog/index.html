@@ -90,9 +90,14 @@
     <h2>Just my thoughts. To be updated in the future)</h2>
   </div>
 
-  <div style="width: 100%; max-width: 1200px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+ <div style="width: 100%; max-width: 1200px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
     
-    <div style="background-color: rgba(128, 128, 128, 0.05); padding: 8px 15px; display: flex; justify-content: flex-end; border-bottom: 1px solid rgba(0,0,0,0.1);">
+    <div style="background-color: rgba(128, 128, 128, 0.05); padding: 8px 15px; display: flex; justify-content: flex-end; gap: 10px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <!-- Новая кнопка для прокрутки к описанию (Read Me) -->
+        <a href="#map-features" class="btn btn-sm btn-outline-primary m-0" style="text-transform: none; font-size: 0.85rem; padding: 5px 10px;" title="Read Map Documentation">
+            <i class="fas fa-book mr-1"></i> Read Documentation
+        </a>
+        
         <a href="/assets/galaxy_3d_prior3.html" target="_blank" class="btn btn-sm btn-outline-secondary m-0" style="text-transform: none; font-size: 0.85rem; padding: 5px 10px;" title="Open map in a new tab">
             <i class="fas fa-external-link-alt mr-1"></i> Open map in a new tab
         </a>
@@ -105,7 +110,55 @@
         style="border: none; display: block;"
         allowfullscreen>
     </iframe>
-</div>
+  </div>
+
+  <!-- БЛОК С ОПИСАНИЕМ ФУНКЦИЙ (READ ME) -->
+  <div id="map-features" class="card mt-4" style="max-width: 1200px; margin: 0 auto; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <div class="card-body">
+      <h3 class="card-title font-weight-bold mb-4"><i class="fas fa-info-circle mr-2 text-primary"></i>About the 3D Galaxy Map</h3>
+      <p class="card-text">
+        This interactive 3D application is designed for the visualization and exploration of High-Mass X-ray Binaries (HMXBs) within the Milky Way. It combines local catalog data with real-time queries to astronomical databases.
+      </p>
+
+      <h5 class="font-weight-bold mt-4"><i class="fas fa-eye mr-2"></i>Visualization Features</h5>
+      <ul>
+        <li><strong>Galactic Structure:</strong> Highly detailed 3D representation of the Milky Way's spiral arms (Norma-Outer, Scutum-Centaurus, Sagittarius-Carina, Perseus, Local, 3-kpc, and Spur) based on the <em>BeSSeL survey (Reid et al. 2019)</em>.</li>
+        <li><strong>Dynamic Environment:</strong> Features a generated background starfield, distant galaxies, and a galactic dust plane.</li>
+        <li><strong>Key Reference Points:</strong> Quick focus toggles for the Sun (☉) and the Supermassive Black Hole at the Galactic Center (Sgr A*).</li>
+        <li><strong>Uncertainty Visualization:</strong> Displays 3D "error bars" (whiskers) along the line of sight for sources with uncertain distance estimates.</li>
+      </ul>
+
+      <h5 class="font-weight-bold mt-4"><i class="fas fa-search mr-2"></i>Smart Search Engine</h5>
+      <p>The map features a powerful search bar with auto-suggestions and cascading queries (Local Database &rarr; SIMBAD &rarr; VizieR):</p>
+      <ul>
+        <li><strong>By Name:</strong> Type any object name or alias (e.g., <em>Cen X-3</em>, <em>Vela X-1</em>).</li>
+        <li><strong>By Gaia ID:</strong> Exact queries using the format <em>Gaia DR3 [ID]</em>.</li>
+        <li><strong>By Coordinates:</strong> Supports both ICRS and Galactic coordinates (e.g., <code>135.5 -40.5</code> or <code>16 17 04.4 -15 31 14.8</code>).</li>
+        <li><strong>Radius Customization:</strong> Adjust the coordinate search radius in arcseconds, arcminutes, or degrees.</li>
+      </ul>
+
+      <h5 class="font-weight-bold mt-4"><i class="fas fa-ruler-combined mr-2"></i>Custom Distance Overrides</h5>
+      <p>You can dynamically override the distance to any searched object using the <code>@</code> syntax. The map will instantly project the source to the specified distance:</p>
+      <ul>
+        <li><code>@8kpc</code> or <code>@8000pc</code> — Places the source exactly at 8 kpc.</li>
+        <li><code>@12+4-5kpc</code> — Places the source at 12 kpc and draws uncertainty whiskers spanning from 7 kpc to 16 kpc.</li>
+      </ul>
+
+      <h5 class="font-weight-bold mt-4"><i class="fas fa-database mr-2"></i>Database Integrations & Tools</h5>
+      <ul>
+        <li><strong>Comprehensive Info Cards:</strong> Clicking a source reveals its Distance, Z-height, RA/Dec, Spectral Type, Mass, Pulse Period, and more.</li>
+        <li><strong>External Links:</strong> Direct access to the object's page on <strong>SIMBAD</strong>, <strong>VizieR</strong>, and the <strong>XRBcats</strong> catalog.</li>
+        <li><strong>3DNh-tool Integration:</strong> A dedicated button copies the object's coordinates/parameters to your clipboard and opens the Tuebingen 3D N<sub>H</sub>-tool.</li>
+      </ul>
+
+      <h5 class="font-weight-bold mt-4"><i class="fas fa-mouse-pointer mr-2"></i>Navigation & Controls</h5>
+      <ul>
+        <li><strong>Mouse Controls:</strong> Left-click and drag to rotate, scroll to zoom, right-click and drag to pan.</li>
+        <li><strong>History:</strong> Use the <code>Back ◀</code> and <code>Forward ▶</code> buttons (or <code>Alt + Left/Right Arrows</code>) to navigate your recent searches.</li>
+        <li><strong>Reset View:</strong> Double-click anywhere on the map, press the <code>Esc</code> key, or click the Reset button to return to the default overview.</li>
+      </ul>
+    </div>
+  </div>
 
 </div>
 
