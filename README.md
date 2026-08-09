@@ -45,7 +45,7 @@ Designed and implemented supervised ML pipelines to process, cross-match, and cl
 ## 📬 Connect with Me
 
 *   **Email:** [artur.avakyan@astro.uni-tuebingen.de](mailto:artur.avakyan@astro.uni-tuebingen.de)
-*   **LinkedIn:** [linkedin.com/in/artur-avakyan](#) *(Note: insert your actual LinkedIn link here)*
+*   **LinkedIn:** [linkedin.com/in/artur-avakyan](#)(https://www.linkedin.com/in/artur-avakyan-618529428/)*
 *   **ORCID:** [0000-0001-7502-7951](https://orcid.org/0000-0001-7502-7951)
 
 ---
