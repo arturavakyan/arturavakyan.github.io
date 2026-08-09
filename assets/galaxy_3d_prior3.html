@@ -347,7 +347,32 @@
         
         #card-link-end-pleasure { background-color: #d32f2f; color: #fff; display: none; }
         #card-link-end-pleasure:hover { background-color: #b71c1c; }
-
+        
+        .param-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            column-gap: 12px;
+            row-gap: 6px;
+            font-size: 13.5px;
+            line-height: 1.4;
+        }
+        .p-label {
+            color: #8b96a5; /* Приглушенный серо-голубой для названий */
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .p-val {
+            color: #f8fafc; /* Чистый белый для самих значений */
+            font-weight: 400;
+        }
+        .p-divider {
+            grid-column: 1 / -1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+            border-radius: 1px;
+        }
+        
         /* СТИЛИ ДЛЯ СКЛАДНОГО СПРАВОЧНИКА */
         .help-accordion {
             background-color: rgba(255, 255, 255, 0.01);
@@ -707,7 +732,19 @@
                 // 3. И ТОЛЬКО ТЕПЕРЬ убираем лоадер и летим (наш Зум!)
                 revealMap();
             });
-        }).catch(err => console.error("Ошибка загрузки данных:", err));
+        }).catch(err => {
+            console.error("Data loading error:", err);
+            const loader = document.getElementById('loader-container');
+            if (loader) {
+                loader.innerHTML = `
+                    <div style="color: #ff2a2a; font-size: 16px; text-align: center; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 8px; border: 1px solid #ff2a2a;">
+                        <b>CRITICAL ERROR</b><br><br>
+                        Failed to load local database (JSON).<br>
+                        If you opened this file locally (file://), please run a local web server<br>
+                        (e.g., <i>python -m http.server</i>).
+                    </div>`;
+            }
+        });
         
         window.isRestyling = false; // Блокирует опрос координат во время асинхронной перерисовки Plotly
         
@@ -1659,6 +1696,8 @@
                 isGaiaIdQuery = true;
                 gaiaIdFromQuery = query.substring(9).trim();
             }
+            
+            let sesameOid = null
 
             if (searchCoords) {
                 ra = searchCoords.ra;
@@ -1672,6 +1711,10 @@
                         if (xml.querySelector('jradeg') && xml.querySelector('jdedeg')) {
                             ra = parseFloat(xml.querySelector('jradeg').textContent);
                             dec = parseFloat(xml.querySelector('jdedeg').textContent);
+                            // ИЗМЕНЕНИЕ ЗДЕСЬ: Вытаскиваем уникальный ID объекта из Sesame
+                            if (xml.querySelector('oid')) {
+                                sesameOid = xml.querySelector('oid').textContent;
+                            }
                         } else { return null; }
                     }
                 } catch (e) { return null; }
@@ -1683,7 +1726,18 @@
             let simbadSearchRad = isCoordinateSearch ? userRadiusDeg : 5.0 / 3600.0;
 
             let simbadAdql = null;
-            if (ra !== null && dec !== null) {
+            
+            // ИЗМЕНЕНИЕ ЗДЕСЬ: Умный выбор типа ADQL запроса
+            if (sesameOid) {
+                // Если мы искали по имени и Sesame дал нам точный OID, ищем конкретно этот объект (не по радиусу!)
+                simbadAdql = `SELECT TOP 1 b.main_id, b.ra, b.dec, b.sp_type, 
+                              0 AS dist_deg, 
+                              i.id as gaia_id, b.plx_value, b.plx_err, b.oid, b.otype_txt
+                              FROM basic b 
+                              LEFT JOIN ident i ON i.oidref = b.oid AND i.id LIKE 'Gaia DR3 %' 
+                              WHERE b.oid = ${sesameOid}`;
+            } else if (ra !== null && dec !== null) {
+                // Если это был чистый поиск по координатам - ищем по радиусу (соседей)
                 simbadAdql = `SELECT TOP 1 b.main_id, b.ra, b.dec, b.sp_type, 
                               DISTANCE(POINT('ICRS', b.ra, b.dec), POINT('ICRS', ${ra}, ${dec})) AS dist_deg, 
                               i.id as gaia_id, b.plx_value, b.plx_err, b.oid, b.otype_txt
@@ -1691,7 +1745,7 @@
                               LEFT JOIN ident i ON i.oidref = b.oid AND i.id LIKE 'Gaia DR3 %' 
                               WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', ${ra}, ${dec}, ${simbadSearchRad})) = 1 
                               ORDER BY dist_deg ASC`;
-            } else if (isGaiaIdQuery) {
+            }else if (isGaiaIdQuery) {
                 simbadAdql = `SELECT TOP 1 b.main_id, b.ra, b.dec, b.sp_type, 
                               0 AS dist_deg, 
                               i.id as gaia_id, b.plx_value, b.plx_err, b.oid, b.otype_txt
@@ -1766,7 +1820,7 @@
                     if (grow) {
                         if (!simbadResult.oid) {
                             simbadResult.name = `Gaia DR3 ${gaiaSourceId}`;
-                            simbadResult.otype = 'Star (Gaia DR3)';
+                            simbadResult.otype = 'Gaia DR3 Object';
                             simbadResult.ra = parseFloat(grow[1]);
                             simbadResult.dec = parseFloat(grow[2]);
                             simbadResult.gaia_id = String(gaiaSourceId);
@@ -1947,6 +2001,14 @@
                     targetName = targetName.replace(/@.*$/, '').trim();
                 }
             }
+            
+            let distSuffix = "";
+            if (targetDist !== null) {
+                distSuffix = targetDist < 1.0 
+                    ? ` (@${Math.round(targetDist * 1000)}pc)` 
+                    : ` (@${parseFloat(targetDist.toFixed(3))}kpc)`;
+            }
+            
             if (isSunQuery(targetName)) {
                 const sunSource = hmxbData.find(s => s.isSun);
                 if (sunSource) selectSource(sunSource);
@@ -2039,7 +2101,7 @@
                         const cart = gal2cart(gal.l_rad, gal.b_rad, targetDist);
                         // Вызов 1
                         const cSource = buildCustomSource({
-                            name: `${localObj.name} (@${targetDist.toFixed(2)}kpc)`,
+                            name: `${localObj.name}${distSuffix}`,
                             originalName: localObj.name, first_simbad_id: localObj.first_simbad_id,
                             gmag: localObj.gmag, sptype: localObj.sptype, otype: localObj.otype, teff: localObj.teff,
                             dist_source: "User Override", isAssumedDist: false
@@ -2059,7 +2121,7 @@
                 const cart = gal2cart(appliedGal.l_rad, appliedGal.b_rad, appliedDist);
                 const prefix = coordSys === 'gal' ? 'Gal' : 'ICRS';
                 let finalName = simbadMatch ? simbadMatch.name : `${prefix}: ${coords.val1.toFixed(2)}, ${coords.val2.toFixed(2)}`;
-                if (targetDist !== null) finalName += ` (@${targetDist.toFixed(2)}kpc)`;
+                finalName += distSuffix; // Применяем умный суффикс
 
                 const cSource = buildCustomSource({
                     name: finalName, originalName: simbadMatch ? simbadMatch.name : finalName,
@@ -2080,7 +2142,7 @@
                     const gal = eq2gal(localMatch.ra, localMatch.dec);
                     const cart = gal2cart(gal.l_rad, gal.b_rad, targetDist);
                     const cSource = buildCustomSource({
-                        name: `${localMatch.name} (@${targetDist.toFixed(2)}kpc)`,
+                        name: `${localMatch.name}${distSuffix}`,
                         originalName: localMatch.name, first_simbad_id: localMatch.first_simbad_id,
                         gmag: localMatch.gmag, sptype: localMatch.sptype, otype: localMatch.otype, teff: localMatch.teff
                     }, gal.l_rad, gal.b_rad, targetDistLow, targetDistHigh, cart, targetDist, localMatch.ra, localMatch.dec);
@@ -2096,7 +2158,13 @@
             // 3. ГЛОБАЛЬНЫЙ ПОИСК ЧЕРЕЗ СТРАСБУРГ (SIMBAD)
             searchInput.placeholder = "Searching SIMBAD database...";
             const simbadCoords = await resolveViaSimbad(targetName);
-            searchInput.placeholder = "Enter HMXB name, coordinates...";
+            // ДОБАВИТЬ ВОТ ЭТО:
+            if (!simbadCoords && targetName.length > 2) {
+                 searchInput.placeholder = "SIMBAD Timeout/Limit. Try again later.";
+                 setTimeout(() => searchInput.placeholder = "Enter HMXB name, coordinates...", 3000);
+            } else {
+                 searchInput.placeholder = "Enter HMXB name, coordinates...";
+            }
             
             // ПЕРЕХВАТЧИК: Если SIMBAD понял, что это Черная Дыра (по любому алиасу, например AX J1745.6-2900)
             if (simbadCoords && (simbadCoords.name === 'NAME Sgr A*' || simbadCoords.name.includes('Sgr A*'))) {
@@ -2123,7 +2191,7 @@
                         const gal = eq2gal(localMatch.ra, localMatch.dec);
                         const cart = gal2cart(gal.l_rad, gal.b_rad, targetDist);
                         const cSource = buildCustomSource({
-                            name: `${localMatch.name} (@${targetDist.toFixed(2)}kpc)`,
+                            name: `${localMatch.name}${distSuffix}`,
                             originalName: localMatch.name, first_simbad_id: localMatch.first_simbad_id,
                             gmag: localMatch.gmag, sptype: localMatch.sptype, otype: localMatch.otype, teff: localMatch.teff
                         }, gal.l_rad, gal.b_rad, targetDistLow, targetDistHigh, cart, targetDist, localMatch.ra, localMatch.dec);
@@ -2146,7 +2214,7 @@
                 const cart = gal2cart(gal.l_rad, gal.b_rad, appliedDist);
                 
                 const cSource = buildCustomSource({
-                    name: `${simbadCoords.name}${targetDist !== null ? ' (@' + targetDist.toFixed(2) + 'kpc)' : ''}`,
+                    name: `${simbadCoords.name}${distSuffix}`,
                     originalName: simbadCoords.name, 
                     first_simbad_id: simbadCoords.oid ? simbadCoords.name : null, 
                     gmag: simbadCoords.gmag, teff: simbadCoords.teff,
@@ -2448,7 +2516,7 @@ Open a new tab to find it manually in SIMBAD?`);
                     <strong>Gaia G-mag:</strong> -99.9 mag (Blindingly delicious)<br>
                     <strong>Pulse Period (P<sub>pulse</sub>):</strong> 0.001 s (Heartbeat of cocoa fans)<br>
                     <strong>Orbital Period (P<sub>orb</sub>):</strong> &infin; (The Universe orbits Bounty)<br>
-                    <strong>Effective Temp (T<sub>eff</sub>):</strong> 310 K (Perfect melting temperature)<br>
+                    <strong>Eff.Temperature (T<sub>eff</sub>):</strong> 310 K (Perfect melting temperature)<br>
                     <strong>Column Density (N<sub>H</sub>):</strong> 999.9 &times; 10<sup>22</sup> cm<sup>-2</sup><br>
                     <strong>Mass:</strong> 999,999,999.0 M<sub>&odot;</sub>
                 `;
@@ -2577,33 +2645,54 @@ Open a new tab to find it manually in SIMBAD?`);
                     distText += ` (${Math.round(d * 1000)} pc)`;
                 }
 
-                // 2. Подписи источников
                 let distSubText = "";
                 if (source.isAssumedDist) {
-                    distSubText = `<br><span style="color:#ff9800; font-size:11px;">(Assumed Default @4.0kpc)</span>`;
+                    distSubText = `<div style="color:#ff9800; font-size:11px; margin-top:2px;">(Assumed Default @4.0kpc)</div>`;
                 } else if (source.dist_source) {
-                    distSubText = `<br><span style="color:#a3ff7a; font-size:11px;">via ${source.dist_source}</span>`;
+                    distSubText = `<div style="color:#a3ff7a; font-size:11px; margin-top:2px;">via ${source.dist_source}</div>`;
+                }
+
+                // Функция-помощник для создания ровных строк
+                function makeRow(label, value) {
+                    return `<div class="p-label">${label}:</div><div class="p-val">${value}</div>`;
                 }
 
                 if (source.isSun) {
                     cardDetails.innerHTML = `
-                        <strong>Status:</strong> Our Home Star (Solar System Barycenter)<br>
-                        <strong>Distance:</strong> 0.0 kpc<br>
-                        <strong>Z-height:</strong> ${source.z_pc.toFixed(1)} pc<br>
-                        <strong>Spectral Type:</strong> G2V<br>
-                        <strong>Mass:</strong> 1.00 M<sub>☉</sub>
+                        <div class="param-grid">
+                            ${makeRow('Status', '<span style="color:#ffd54f;">Our Home Star</span>')}
+                            ${makeRow('Distance', '0.0 kpc')}
+                            ${makeRow('Z-height', `${source.z_pc.toFixed(1)} pc`)}
+                            <div class="p-divider"></div>
+                            ${makeRow('Spectral Type', 'G2V')}
+                            ${makeRow('Mass', '1.00 M<sub>☉</sub>')}
+                        </div>
                     `;
                     cardLinkSimbad.style.display = 'none';
                     cardLinkXrbcat.style.display = 'none';
                     cardLinkVizier.style.display = 'none';
                     cardLinkNh3d.style.display = 'none';
                 } 
+                else if (source.isSgrA) {
+                    cardDetails.innerHTML = `
+                        <div class="param-grid">
+                            ${makeRow('Status', '<span style="color:#ff1100;">Galactic Center</span>')}
+                            ${makeRow('Distance', '~8.15 kpc (Fixed)')}
+                            ${makeRow('RA, Dec', `${source.ra.toFixed(5)}, ${source.dec.toFixed(5)}`)}
+                            <div class="p-divider"></div>
+                            ${makeRow('Spectral Type', source.sptype)}
+                            ${makeRow('Mass', '~4.15 × 10<sup>6</sup> M<sub>☉</sub>')}
+                        </div>
+                    `;
+                }
                 else {
-                    // Включаем кнопки обратно, если это не Солнце
                     cardLinkSimbad.style.display = 'block';
                     cardLinkNh3d.style.display = 'block';
 
-                    let htmlInfo = `<strong>Distance:</strong> ${distText}${distSubText}<br>`;
+                    let htmlInfo = `<div class="param-grid">`;
+                    
+                    // Блок 1: Пространственные данные
+                    htmlInfo += makeRow('Distance', `${distText}${distSubText}`);
 
                     // Формируем диапазоны ошибки
                     if (dL_kpc !== null && dH_kpc !== null) {
@@ -2611,55 +2700,50 @@ Open a new tab to find it manually in SIMBAD?`);
                         let strH = fmtDist(dH_kpc, errSize);
 
                         if (strL === strH) {
-                            htmlInfo += `<strong>Distance Error:</strong> ± (Too narrow to display)<br>`;
+                            htmlInfo += makeRow('Dist. Error', '± (Too narrow)');
                         } else {
                             const isKpcL = strL.includes('kpc');
                             const isKpcH = strH.includes('kpc');
-
                             if (isKpcL && isKpcH) {
-                                // Оба значения в kpc — вырезаем ' kpc' из скобок и пишем в конце
-                                const valL = strL.replace(' kpc', '');
-                                const valH = strH.replace(' kpc', '');
-                                htmlInfo += `<strong>Distance Error:</strong> [${valL} - ${valH}] kpc<br>`;
+                                htmlInfo += makeRow('Dist. Error', `[${strL.replace(' kpc', '')} - ${strH.replace(' kpc', '')}] kpc`);
                             } else if (!isKpcL && !isKpcH) {
-                                // Оба значения в pc — вырезаем ' pc' из скобок и пишем в конце
-                                const valL = strL.replace(' pc', '');
-                                const valH = strH.replace(' pc', '');
-                                htmlInfo += `<strong>Distance Error:</strong> [${valL} - ${valH}] pc<br>`;
+                                htmlInfo += makeRow('Dist. Error', `[${strL.replace(' pc', '')} - ${strH.replace(' pc', '')}] pc`);
                             } else {
-                                // Если единицы разные (один pc, другой kpc — крайне редкий стык границ), оставляем как есть
-                                htmlInfo += `<strong>Uncertainty Range:</strong> [${strL} - ${strH}]<br>`;
+                                htmlInfo += makeRow('Dist. Error', `[${strL} - ${strH}]`);
                             }
                         }
                     } else {
-                        htmlInfo += `<strong>Distance Error:</strong> N/A (Fixed or Unknown)<br>`;
-                    } // <-- Скобка закрыта корректно, логическая цепочка восстановлена
+                        htmlInfo += makeRow('Dist. Error', '<span style="color:#777;">N/A (Fixed/Unknown)</span>');
+                    }
 
-                    // Сократили метку и округлили до 5 знаков, чтобы координаты НЕ переносились на новую строку
-                    htmlInfo += `
-                        <strong>Z-height:</strong> ${source.z_pc.toFixed(1)} pc<br>
-                        <strong>RA, Dec:</strong> ${source.ra.toFixed(5)}, ${source.dec.toFixed(5)}
-                    `;
+                    htmlInfo += makeRow('Z-height', `${source.z_pc.toFixed(1)} pc`);
+                    htmlInfo += makeRow('RA, Dec', `${source.ra.toFixed(5)}, ${source.dec.toFixed(5)}`);
 
-                    // Оставляем только важные физические параметры двойной системы
+                    // РАЗДЕЛИТЕЛЬ
+                    htmlInfo += `<div class="p-divider"></div>`;
+
+                    // Блок 2: Физические параметры
                     if (source.otype && source.otype !== 'Unknown' && source.otype !== 'null') {
-                        htmlInfo += `<br><strong>Object Type:</strong> ${source.otype}`;
+                        htmlInfo += makeRow('Object Type', `<span style="color:#00e5ff;">${source.otype}</span>`);
                     }
                     if (source.sptype && source.sptype !== 'Unknown' && source.sptype !== 'null') {
-                        htmlInfo += `<br><strong>Spectral Type:</strong> ${source.sptype}`;
+                        htmlInfo += makeRow('Spectral Type', source.sptype);
                     }
                     if (source.gmag !== null && source.gmag !== undefined && !isNaN(source.gmag)) {
-                        htmlInfo += `<br><strong>Gaia G-mag:</strong> ${source.gmag.toFixed(2)} mag`;
+                        htmlInfo += makeRow('Gaia G-mag', `${source.gmag.toFixed(2)} mag`);
                     }
                     if (source.ppulse !== null && source.ppulse !== undefined) {
-                        htmlInfo += `<br><strong>Pulse/Spin Period:</strong> ${source.ppulse.toFixed(3)} s`;
+                        htmlInfo += makeRow('Pulse Period', `${source.ppulse.toFixed(3)} s`);
                     }
                     if (source.porb !== null && source.porb !== undefined) {
-                        htmlInfo += `<br><strong>Orbital Period:</strong> ${source.porb.toFixed(3)} d`;
+                        htmlInfo += makeRow('Orbital Period', `${source.porb.toFixed(3)} d`);
                     }
                     if (source.teff !== null && source.teff !== undefined) {
-                        htmlInfo += `<br><strong>Effective Temp:</strong> ${source.teff.toFixed(0)} K`;
+                        htmlInfo += makeRow('Effective Temp', `${source.teff.toFixed(0)} K`);
                     }
+
+                    htmlInfo += `</div>`; // Закрываем сетку
+                    cardDetails.innerHTML = htmlInfo;
 
                     // Красивое исключение для Сверхмассивной ЧД (ее масса фиксирована и не переносится)
                     if (source.isSgrA) {
